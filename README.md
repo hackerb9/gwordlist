@@ -22,13 +22,15 @@ The obvious solution was to use Google's ngram corpus which claims to have a tri
 ## What can this data be used for?
 Anything you want. While my programs are licensed under the GNU GPL ≥3, I'm explicitly releasing the data produced under the same license as Google granted me: Creative Commons Attribution 3.0. 
 
-## How many words does it *really* have? While there are technically a
-little under a trillion "words" in the corpus, it's a mistake to think
-you'll find a trillion *different* or even *useful* words. For
-example, of those trillion, 6% of them are a single comma. Google used
-completely automated OCR techniques to find the words and it made a
-lot of mistakes. Moreover, their definition of a word includes things
-like `s`, `A4oscow`, `IIIIIIIIIIIIIIIIIIIIIIIIIIIII`, `cuando`, `aro`,
+## How many words does it *really* have? 
+
+While there are technically a little under a trillion "words" in the
+corpus, it's a mistake to think you'll find a trillion *different* or
+even *useful* words. For example, of those trillion, 6% of them are a
+single comma. Google used completely automated OCR techniques to find
+the words and it made a lot of mistakes. Moreover, their definition of
+a word includes things like `s`, `A4oscow`,
+`IIIIIIIIIIIIIIIIIIIIIIIIIIIII`, `cuando`, `aro`,
 `ihm`,`SpecialMarkets@ThomasNelson`, `buisness`[sic], and `,`. To
 compensate, they only included words in the corpus that appeared at
 least 40 times, but even so there's so much dreck at the bottom of the
