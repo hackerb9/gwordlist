@@ -1,5 +1,5 @@
 # gwordlist
-This project includes wordlists derived from Google's ngram corpora plus the programs used to automatically download and derive the lists, should you so wish. 
+This project includes wordlists derived from [Google's ngram corpora](http://books.google.com/ngrams/) plus the programs used to automatically download and derive the lists, should you so wish. 
 
 ## What does the data look like?
 
@@ -22,11 +22,34 @@ The obvious solution was to use Google's ngram corpus which claims to have a tri
 ## What can this data be used for?
 Anything you want. While my programs are licensed under the GNU GPL ≥3, I'm explicitly releasing the data produced under the same license as Google granted me: Creative Commons Attribution 3.0. 
 
-## How many words does it *really* have?
-While there are technically a little under a trillion different "words" in the list, it's a mistake to think you'll find a trillion *useful* words. Google used completely automated OCR techniques to find the words and it made a lot of mistakes. Moreover, their definition of a word includes things like `A4oscow`, `IIIIIIIIIII`, `buisness`, `s`, and `,` (yes, just a single comma is a "word"). To compensate, they only included words in the corpus that appeared at least 40 times, but even so there's so much dreck at the bottom of the list that it's really not worth bothering. Personally, I found that words that appeared over 100,000 times tended to be worthwhile. However, even so, I was getting so many obvious OCR errors that my scripts also create cleaner lists by using [dict](http://dict.org) to check every word against a dictionary. (IMPORTANT NOTE! If you run these scripts, be sure to setup your own dictd so you're not pounding the internet servers for a trillion lookups.)
+## How many words does it *really* have? While there are technically a
+little under a trillion "words" in the corpus, it's a mistake to think
+you'll find a trillion *different* or even *useful* words. For
+example, of those trillion, 6% of them are a single comma. Google used
+completely automated OCR techniques to find the words and it made a
+lot of mistakes. Moreover, their definition of a word includes things
+like `s`, `A4oscow`, `IIIIIIIIIIIIIIIIIIIIIIIIIIIII`, `cuando`, `aro`,
+`ihm`,`SpecialMarkets@ThomasNelson`, `buisness`[sic], and `,`. To
+compensate, they only included words in the corpus that appeared at
+least 40 times, but even so there's so much dreck at the bottom of the
+list that it's really not worth bothering. Personally, I found that
+words that appeared over 100,000 times tended to be worthwhile.
+However, even so, I was getting so many obvious OCR errors that I
+decided to also create some cleaner lists by using
+[dict](http://dict.org) to check every word against a dictionary.
+(IMPORTANT NOTE! If you run these scripts, be sure to setup your own
+dictd so you're not pounding the internet servers for a bazillion
+lookups.) After pruning with dictionaries, I found 65536 words seemed
+like a more reasonable number to cutoff.
 
-## How big are the files?
-If you run my scripts (which are tiny) they will download about 5.4GiB of data from Google. However, if you simply want [the final list](), it is about half a gigabyte, uncompressed. Alternately, if you don't need so much, consider downloading one of the smaller files I created that have been cleaned up and limited to only the top words.
+## How big are the files? If you run my scripts (which are tiny) they
+will download about 5.4GiB of data from Google. However, if you simply
+want [the final
+list](https://github.com/hackerb9/gwordlist/blob/master/1gramsbyfreq.txt.gz),
+it is about 100MB, uncompressed. Alternately, if you don't need so
+much, consider downloading one of the smaller files I created that
+have been cleaned up and limited to only the top words, such as
+[frequency-alpha-gcide.txt](https://github.com/hackerb9/gwordlist/blob/master/frequency-alpha-gcide.txt).
 
 ## What got thrown away in these subcopora?
 As you can guess, since the file size went down by 90%, I tossed a lot of info. The biggest changes were from losing the separate counts for each year, ignoring the tags for parts of speech (e.g., I merged watch_VERB with watch_NOUN), and from combining different capitalization into a single term. (Each word is listed under its most frequent capitalization: for example, "London", instead of "london".) If you need that data, it's not hard to modify the scripts. Let me know if you have trouble.
