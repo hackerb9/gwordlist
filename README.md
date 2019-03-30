@@ -15,7 +15,7 @@ Here's a sample of one of the files:
 Interestingly, if this data is right, only five words make up 20% of all the words in books from 1880 to 2000. And one of those "words" is a comma! (Don't believe comma is a word? I've also created wordlists that exclude punctuation.)
 
 ## Why does this exist?
-I needed my [XKCD 936]() compliant[password generator](https://github.com/hackerb9/mkpass) to have a good list of words in order to make memorable passphrases. Most lists I've seen are not terribly good for my purposes as the words are often from extremely narrow domains. The best I found was [SCOWL](), but I didn't like that the words weren't sorted by frequency so I couldn't easily take a slice of, say, the top 4096 most frequent words.
+I needed my [XKCD 936]() compliant [password generator](https://github.com/hackerb9/mkpass) to have a good list of words in order to make memorable passphrases. Most lists I've seen are not terribly good for my purposes as the words are often from extremely narrow domains. The best I found was [SCOWL](), but I didn't like that the words weren't sorted by frequency so I couldn't easily take a slice of, say, the top 4096 most frequent words.
 
 The obvious solution was to use Google's ngram corpus which claims to have a trillion different words pruned from all the books they've scanned for books.google.com (about 4% of all books ever published, they say). Unfortunately, while some people had posted small lists, nobody had the entire list of every word sorted by frequency. So, I made this and here it is.
 
@@ -36,7 +36,7 @@ compensate, they only included words in the corpus that appeared at
 least 40 times, but even so there's so much dreck at the bottom of the
 list that it's really not worth bothering. Personally, I found that
 words that appeared over 100,000 times tended to be worthwhile.
-However, even so, I was getting so many obvious OCR errors that I
+In addition, I was getting so many obvious OCR errors that I
 decided to also create some cleaner lists by using
 [dict](http://dict.org) to check every word against a dictionary.
 (IMPORTANT NOTE! If you run these scripts, be sure to setup your own
@@ -44,7 +44,9 @@ dictd so you're not pounding the internet servers for a bazillion
 lookups.) After pruning with dictionaries, I found 65536 words seemed
 like a more reasonable number to cutoff.
 
-## How big are the files? If you run my scripts (which are tiny) they
+## How big are the files? 
+
+If you run my scripts (which are tiny) they
 will download about 5.4GiB of data from Google. However, if you simply
 want [the final
 list](https://github.com/hackerb9/gwordlist/blob/master/1gramsbyfreq.txt.gz),
