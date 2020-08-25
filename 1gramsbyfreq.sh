@@ -15,8 +15,8 @@
 # "The", "THE"), but the most common usage is retained. ("London", not
 # "london").
 
-# Side note 1: The raw data is >5GB, and I had assumed awk would take
-# a lot of memory for such an array made from that much data, but
+# Side note 1: The raw data is >14GB, and I had assumed awk would take
+# a lot of memory for such an array made from that much data, but no,
 # there were a lot of repeated entries for the same word in different
 # years.
 
@@ -29,17 +29,14 @@ tempfile="/dev/shm/temp.txt"
 if ! touch "$tempfile"; then tempfile="temp.txt"; fi
 
 
-# Download 5.3 GiB of data (and awk it down to one ten-thousandth the size.)
+# Download 14 GiB of data (and awk it down to one ten-thousandth the size.)
 echo "PHASE 0: Download all Google nGrams (> 5 GiB)" >&2
 
-wget --no-clobber http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-1gram-20120701-{a..z}.gz
-
-wget --no-clobber http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-1gram-20120701-{0..9}.gz
-
-wget --no-clobber http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-1gram-20120701-{other,punctuation}.gz
+# Google Books v3.0 (20200217) comes as 24 files (0 to 23)
+wget --no-clobber http://storage.googleapis.com/books/ngrams/books/20200217/eng/1-000{00..23}-of-00024.gz
 
 echo "PHASE 1: Accumulating count of usage for every word in Google nGrams" >&2
-for file in googlebooks-eng-all-1gram-*.gz; do
+for file in 1-*-of-*.gz; do
     if [[ -s "$file-accumcache" && "$file-accumcache" -nt "$file" ]]; then
 	echo "$file-accumcache: using cached file" >&2
     else
@@ -70,9 +67,9 @@ END {
     fi
 done
 
-if [[ "$regenallwords" ]]; then
+if [[ "$regenallwords" || ! -s "allwords.txt" ]]; then
     echo "Concatenating all 1gram caches to allwords.txt" >&2 
-    cat googlebooks-eng-all-1gram-*.gz-accumcache > "allwords.txt"
+    cat 1-*-of-*.gz-accumcache > "allwords.txt"
 fi
 
 # Sort most common words to the top
