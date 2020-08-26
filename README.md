@@ -24,30 +24,29 @@ Anything you want. While my programs are licensed under the GNU GPL ≥3, I'm ex
 
 ## How many words does it *really* have? 
 
-While there are technically a little under a trillion "words" in the
-corpus, it's a mistake to think you'll find a trillion *different* or
-even *useful* words. For example, of those trillion, 6% of them are a
-single comma. Google used completely automated OCR techniques to find
-the words and it made a lot of mistakes. Moreover, their definition of
-a word includes things like `s`, `A4oscow`,
-`IIIIIIIIIIIIIIIIIIIIIIIIIIIII`, `cuando`, `aro`,
+There are 37,235,985 entries in the V3 (20200217) corpus, but it's a
+mistake to think there are 37 million *different*, *useful* words. For
+example, 6% of the words are a single comma. Google used completely
+automated OCR techniques to find the words and it made a lot of
+mistakes. Moreover, their definition of a “word” includes things like
+`s`, `A4oscow`, `IIIIIIIIIIIIIIIIIIIIIIIIIIIII`, `cuando`, `لاامش`,
 `ihm`,`SpecialMarkets@ThomasNelson`, `buisness`[sic], and `,`. To
 compensate, they only included words in the corpus that appeared at
 least 40 times, but even so there's so much dreck at the bottom of the
 list that it's really not worth bothering. Personally, I found that
-words that appeared over 100,000 times tended to be worthwhile.
-In addition, I was getting so many obvious OCR errors that I
-decided to also create some cleaner lists by using
-[dict](http://dict.org) to check every word against a dictionary.
-(IMPORTANT NOTE! If you run these scripts, be sure to setup your own
-dictd so you're not pounding the internet servers for a bazillion
-lookups.) After pruning with dictionaries, I found 65536 words seemed
-like a more reasonable number to cutoff.
+words that appeared over 100,000 times tended to be worthwhile. In
+addition, I was getting so many obvious OCR errors that I decided to
+also create some cleaner lists by using [dict](http://dict.org) to
+check every word against a dictionary. (IMPORTANT NOTE! If you run
+these scripts, be sure to setup your own dictd so you're not pounding
+the internet servers for a bazillion lookups.) After pruning with
+dictionaries, I found 65536 words seemed like a more reasonable number
+to cutoff.
 
 ## How big are the files? 
 
 If you run my scripts (which are tiny) they
-will download about 5.4GiB of data from Google. However, if you simply
+will download about 14GiB of data from Google. However, if you simply
 want [the final
 list](https://github.com/hackerb9/gwordlist/blob/master/1gramsbyfreq.txt.gz),
 it is about 100MB, uncompressed. Alternately, if you don't need so
@@ -60,3 +59,9 @@ As you can guess, since the file size went down by 90%, I tossed a lot of info. 
 
 ## What got added?
 I counted up the total number of words in all the books so I could get a rough percentage of how often each word was being used in English. I also include a running total of the percentage so you can truncate the file wherever you want. (E.g., to get a list of 95% of all words used in English). 
+
+## Bugs
+
+* Script cannot run on a 32-bit machine as it briefly requires more
+  than 4GiB of RAM as it makes a hashtable of every word.
+
