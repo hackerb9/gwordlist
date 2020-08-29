@@ -144,56 +144,82 @@ fi
 
 
 # It's useful to pare the set down to the most useful words
-# * consist of only lowercase letters, no number, symbols or capitalization.
+# * consist of only ASCII alphabetic letters, no number, symbols, or Unicode
+# * must appear in a dictionary, such as WordNet or Websters1913 (gcide)
 # * must have at least one vowel
 # * no curse words or other stop words ("et" "al" "y" "de" "le" "des" "un" "von" "di")
-# * must occur more than 100,000 times in the corpus
-# * must appear in WordNet or Websters1913
-echo "PHASE 4: Now extracting alphabetic words with vowels to alpha1gramsbyfreq.txt" >&2
-if [[ "alpha1gramsbyfreq.txt" -nt "1gramsbyfreq.txt" ]]; then
-    echo "Skipping alpha extraction, alpha1gramsbyfreq.txt is newer than 1gramsbyfreq.txt" >&2
-else
-    # Set LANG so we don't get unicode characters as alpha
-    LANG=C grep '^[a-z]*[aeiouy][a-z]*\s' 1gramsbyfreq.txt > "$tempfile"
+
+# * maybe cut off if it occurs less than 100,000 times in the corpus.
+#   Or maybe not... this would rule out publishable, ventriloquism,
+#   behead, ungentlemanly, fisticuffs, and headscarf.
+#   "Mewl" only occurs 6,000 times in the entire trillion word corpus.
+
+echo "PHASE 4: Now extracting valid words by comparing to dictionaries." >&2
+set -- subphase {a..z}
+for dict in wn gcide oed; do
+    shift 
+    output=alpha1gramsbyfreq-$dict.txt
+    echo "PHASE 4$1: using dictionary '$dict' to create $output" >&2
+    if ! dict -h localhost -D | grep -q $dict; then
+	echo "    '$dict' database is not installed locally. Skipping."
+	continue
+    fi
+
+    if [[ -s "$output" && "$output" -nt "1gramsbyfreq.txt" ]]; then
+	echo "    Skipping, $output is newer than 1gramsbyfreq.txt" >&2
+	continue
+    fi
+	
+    # Set LANG so we don't get unicode characters as alphabetic. 
+    LANG=C grep -i '^[a-z]*[aeiouy][a-z]*\s' 1gramsbyfreq.txt > "$tempfile"
 
     if [[ -s "stopwords.txt" ]]; then
-	echo "Removing stopwords using stopwords.txt"
-	grep -x -v -f stopwords.txt "$tempfile" >"${tempfile}2"
+	echo "    Removing stopwords using 'stopwords.txt'"
+	grep -i -x -v -f stopwords.txt "$tempfile" >"${tempfile}2"
 	mv "${tempfile}2" "$tempfile"
     fi
 
-    echo "Pruning to first 65536 words actually found in the dictionary.">&2
+    echo "    Pruning to first 65536 words actually found in dictionary $dict.">&2
     # Note that we explicitly want the headword, not inflections of a word.
-    # For example, I want "nincompoop" but not "nincompoops"
+    # For example, we want "University" but not "Universities".
     count=0
     cat "$tempfile" | while read word wordcount; do
-			  if dict -d wn -s exact -m "$word" >/dev/null 2>&1; then
-			      echo "$word $wordcount"
-			      count=$((count+1))
-			  fi
-			  total=$((total+1))
-			  if [[ $(($total % 1000)) -eq 0 ]]; then
-			      tput el1 >&2
-			      printf "\r$total: found $count. Current: $word $wordcount">&2
-			  fi
-			  if [[ $count -ge 65536 ]]; then break; fi
-		      done >alpha1gramsbyfreq.txt
-
+	if dict -h localhost -d $dict -s exact -m "$word" >/dev/null 2>&1; then
+	    echo "$word $wordcount"
+	    count=$((count+1))
+	fi
+	total=$((total+1))
+	if [[ $(($total % 1000)) -eq 0 ]]; then
+	    tput el1 >&2
+	    printf "\r$total: found $count. Current: $word $wordcount">&2
+	fi
+	if [[ $count -ge 65536 ]]; then break; fi
+    done >$output
+done
+shopt -s nullglob
+if [[ -z "$(echo alpha1gramsbyfreq-*.txt)" ]]; then
+    echo "No pruned files created. Aborting." >&2
+    echo "Maybe you need to 'apt install dictd dict-wn dict-gcide'?"  >&2
+    exit 1
 fi
 
-
 # Now make a pretty version, showing percentage and accumulation.
-echo "PHASE 5: Creating prettified version, frequency-alpha.txt" >&2
+echo "PHASE 5: Creating prettified version with cumulative percentage." >&2
+set -- subphase {a..z}
+for unpretty in alpha1gramsbyfreq-*.txt; do
+    suffix=${unpretty#alpha1gramsbyfreq-}
+    pretty=frequency-alpha-$suffix
+    shift
+    echo "PHASE 5$1: Prettifying $unpretty into $pretty" >&2
 
-if [[ "frequency-alpha.txt" -nt "alpha1gramsbyfreq.txt" ]]; then
-    echo "Skipping prettification. frequency-alpha.txt is newer than alpha1gramsbyfreq.txt" >&2
-else
-    echo -n "Finding total words... " >&2
-    totalwords=$(awk '{sum+=$2} END{print sum}' < alpha1gramsbyfreq.txt)
-    printf "%'d\n" "$totalwords" >&2
-
-    echo -n "Accumulating percentages for each word, saving in frequency-alpha.txt" >&2
-    cat alpha1gramsbyfreq.txt | awk -v tick="'" -v totalwords=$totalwords '
+    if [[ -s "$pretty" && "$pretty" -nt "$unpretty" ]]; then
+	echo "    Skipping prettification as $pretty is newer." >&2
+    else
+	echo -n "    Finding total usage of words... " >&2
+	totalwords=$(awk '{sum+=$2} END{print sum}' < $unpretty)
+	printf "%'d\n" "$totalwords" >&2
+	echo -n "    Accumulating percentages for each word, saving in $pretty" >&2
+	cat $unpretty | awk -v tick="'" -v totalwords=$totalwords '
     BEGIN {
       printf( "#%-9s %-20s\t%14s\t%12s\t%12s\n", 
 	      "RANKING", "WORD", "COUNT", "PERCENT", "CUMULATIVE" );
@@ -204,13 +230,9 @@ else
       printf( "%-10s %-20s\t%"tick"14d\t%12f%%\t%12f%%\n", NR, $1, $2, percent, cum );
     }
     END { print "."  >"/dev/stderr"; }
-    ' > frequency-alpha.txt
-fi
-
+    ' > $pretty
+    fi
+done
 
 
 echo "All done." >&2
-
-
-
-
