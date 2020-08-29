@@ -65,3 +65,251 @@ I counted up the total number of words in all the books so I could get a rough p
 * Script cannot run on a 32-bit machine as it briefly requires more
   than 4GiB of RAM as it makes a hashtable of every word.
 
+## Old Notes
+
+* I may need a manually created "stopword" list due to all the
+  obviously non-English words appearing in the list.
+
+* Some of the 1-grams I'm turning up as quite popular should actually
+  be 2-grams: e.g. York -> New York. Maybe I should add in 2-grams to
+  the list, since some of them will clearly be in the list of most
+  common "words".
+
+* Some words *should* be capitalized, such as "I" and "London".
+  But it makes sense to accumulate "the" and "The", since otherwise
+  both will be listed as one of the most common words.
+
+  Solution: Accumulate twice. First time case-sensitive. Sort by
+  frequency. Then, second time, case-insensitive, outputting the
+  *first* variation found. 
+
+
+* I'm currently getting some very strange results, or at least
+  unexpected, results.  While the 100 words seem reasonably common,
+  there are some strangely highly ranked words:
+
+	124 s
+	147 p
+	151 J
+	165 de
+	202 M
+	209 general
+	214 B
+	225 S
+	226 Mr
+	228 York
+	238 D
+	241 government
+	254 R
+	272 et
+	282 E
+	291 John
+	292 University
+	294 U
+	309 H
+	325 P
+	328 pp
+	359 English
+	365 L
+	371 v
+	373 London
+	390 W
+	391 Fig
+	399 e
+	405 F
+	422 Figure
+	426 G
+	444 British
+	445 T
+	446 c
+	455 N
+	466 II
+	472 b
+	478 French
+		479 England
+	508 St
+	509 General
+
+Compare that with common words that are found much less frequently:
+
+	2124 eat
+	4004 TV
+	6040 ate
+	6041 bedroom
+	6138 fool
+	10007 foul
+	10012 swim
+ 	10017 sore
+	15013 lone
+	15020 doom
+	
+
+
+* Am I adding things up correctly? The least amount of times any word
+  is found is 40. Was that a cut off when they were creating the
+  corpus, presuming words that showed up less than that were OCR
+  errors?
+
+
+* There are a bunch of nonsense/units/foreign words mixed in to this
+ corpus. How can I get rid of them all easily?
+
+** Maybe I can get a list of unit abbreviations and grep them out?
+
+      lbs, J, gm, ppm
+
+** Maybe look up words in gcide and reject non-existent words? OED is too liberal.
+
+   cuando, aro, ihm
+
+** A lot of the words that are of type "_X" are suspicious and there's
+   only 159 of them in the over-1E6 list.
+
+*** Some are not in WordNet and can be easily discarded:
+
+    et dem bei durch deux der per je ibid wird und auf su comme lui que ch
+    della hoc quam del ou auch bien cette les zur sont seq ont du che
+    facto leur nur di una einer entre ich op sich avec um mais qui nicht
+    inasmuch zum peut dans por ah vel quae los eine vous esse sunt im quod
+    nach como une ein aux wie ist lo sie fait las aus werden dei
+
+*** However, that still leaves 83 that are not as easy:
+
+    de e el il au r u tout hell esp b d est sur iv pas sa nous ni z la f
+    se in das chap fig er oder des ii iii m mit als dear alas ma c le o h
+    ex para j vii mi no yes den x oh vi ut bye mm en die l zu v well pro w
+    ab al un si ne ce es k cf viii i y non ad g cum ha sind te
+
+*** Most of the real words ("well", "hell", "dear", "chap", "no",
+    "den", "die", show up as
+    other types of speech. On the other hand, words like "bye", "yes",
+    and "alas" are definitely words, and they're not listed under any
+    other type than _X. (What does _X mean? Interjection?)
+
+* At first I tried accumulating a different count for each usage of a
+  word (e.g., watch_VERB and watch_NOUN), but that meant some words
+  wouldn split their vote and not be listed among the most common.
+  Also, it meant I had many duplicates of the same word. So, I now I
+  just throwaway the part of speech.
+  	       
+  r_ADP   1032605				out_ADV 9199818
+  r_CONJ  1048981				out_ADJ 8645123
+  r_PRON  1019601				out_PRT 332451517
+  r_NUM   3316486				out_NOUN        4462386
+  r_X     3125051				out_ADP 159492310
+  r_NOUN  2975438
+  r_VERB  2931183
+  r_PRT   1044181
+  r_ADJ   2327691
+
+* There are 117 words with no vowels, none of them real words.
+  grep '^[^aeiouy]*_' foo
+
+* Some words are contractions:
+
+	cit_NOUN (webster says it means citizen, but given how
+		 commonly used it is, more often than "dogs", maybe it
+		 was for citations?)
+
+* Some words make no sense whatsoever to me:
+
+        eds_NOUN	12084339
+
+* Some words are british:
+
+	programme
+
+
+* If I had some way to accumulate words to their lemmas ("head word"),
+  that would maybe allow me to accumulate them so they'll make the 1E6
+  threshold of useful words: (watching, watches, watched, -> watch)
+
+** Perhaps dict using wordnet? No. Websters? Sort of. It works for
+  'watching'->'watch', but not 'dogs' -> 'dog'.
+
+* There are some odd orderings. How can "go" be less common than
+  "children"?
+  
+* Some words appear to be misspellings.
+
+  buisness
+
+* Some words may be misspellings or OCR problems.
+
+  ADJOURNMEN, ADMINISTATION, bonjamin, Buddhisn
+
+* Some words are clearly OCR errors, not misspellings in the original
+
+  A1most, A1ways, A1uminum, a1titude
+  A1nerica, A1nerican
+  ADMlNlSTRATlON, LlBRARY, lNSTANT, lNTERNAL, LlVED, lDEAS, lNVERSE, lRELAND
+  lNTRODUCTlON, lNlTlAL, lNTERlM, (and on and on...)
+  areheology
+  anniverfary
+  beingdeveloped    
+  A0riculture, A0erage, 0paque, 0ndustry, 1nch
+  A9riculture, a9ain, a9ainst, a9ent, a9ked, 
+  Aariculture
+  AAppppeennddiixx
+  Thmking
+  A4oscow (should be "Moscow")
+  
+* Some words have been mangled by Google on purpose:
+
+	can't, cannot -> "can not" (bigram)
+
+* List of Part of Speech tags (from books.google.com/ngrams/info)
+  _NOUN_
+  _VERB_
+  _ADJ_		adjective
+  _ADV_		adverb
+  _PRON_	pronoun
+  _DET_		determiner or article
+  _ADP_		an adposition: either a preposition or a postposition
+  _NUM_ 	numeral
+  _CONJ_	conjunction
+  _PRT_		particle
+
+* Google uses these tags for searching, but they don't appear (at least in 1-grams):
+  _ROOT_	root of the parse tree	These tags must stand alone (e.g., _START_)
+  _START_	start of a sentence
+  _END_		end of a sentence
+
+* Google does not document the _X tag
+
+* List of Corpora (from books.google.com/ngrams/info)
+
+  Informal corpus name   Shorthand         Persistent identifier
+  ==============================================================
+  American English 2012  eng_us_2012       googlebooks-eng-us-all-20120701
+  American English 2009  eng_us_2009       googlebooks-eng-us-all-20090715
+			 Books predominantly in the English language
+			 that were published in the United States.
+
+  British English 2012   eng_gb_2012       googlebooks-eng-gb-all-20120701
+  British English 2009   eng_gb_2009       googlebooks-eng-gb-all-20090715
+			 Books predominantly in the English language
+			 that were published in Great Britain.
+
+  English 2012           eng_2012          googlebooks-eng-all-20120701
+  English 2009           eng_2009          googlebooks-eng-all-20090715
+			 Books predominantly in the English language
+			 published in any country.
+
+  English Fiction 2012   eng_fiction_2012  googlebooks-eng-fiction-all-20120701
+  English Fiction 2009   eng_fiction_2009  googlebooks-eng-fiction-all-20090715
+			 Books predominantly in the English language
+			 that a library or publisher identified as
+			 fiction.
+
+  English One Million    eng_1m_2009       googlebooks-eng-1M-20090715
+			 The "Google Million". All are in English with
+			 dates ranging from 1500 to 2008. No more than
+			 about 6000 books were chosen from any one year,
+			 which means that all of the scanned books from
+			 early years are present, and books from later
+			 years are randomly sampled. The random
+			 samplings reflect the subject distributions for
+			 the year (so there are more computer books in
+			 2000 than 1980).
+
