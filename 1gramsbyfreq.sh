@@ -49,8 +49,8 @@ BEGIN {
 	  cb="\r                                                  \r";
 }
 {
-  # Get rid of optional trailing part of speech: "as_well_VERB" -> "as_well"
-  word=gensub("_[A-Z]+", "", 1, $1);
+  # Get rid of optional trailing part of speech: "User_ID_NOUN" -> "User_ID"
+  word=gensub("_[A-Z]+$", "", 1, $1);
   array[word]+=$3;
 }
 NR%10^5==0 {
