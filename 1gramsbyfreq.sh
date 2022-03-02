@@ -38,13 +38,16 @@ wget --no-clobber http://storage.googleapis.com/books/ngrams/books/20200217/eng/
 echo "PHASE 1: Accumulating count of usage for every word in Google nGrams" >&2
 cc -o nocommas nocommas.c || exit 1
 
+declare -A temparray
 for file in 1-*-of-*.gz; do
+    temparray[$file]=$(mktemp)
+
     if [[ -s "$file-accumcache" && "$file-accumcache" -nt "$file" ]]; then
 	echo "$file-accumcache: using cached file" >&2
     else
 	regenallwords=1
 	zcat "$file" | ./nocommas |
-	    awk -v filename="$file" -v tick="'" > "$tempfile" '
+	    awk -v filename="$file" -v tick="'" > ${temparray[$file]} '
 BEGIN { 
 	"tput el1" | getline cb;
 	if (length(cb)==0) 
@@ -52,7 +55,7 @@ BEGIN {
 }
 {
   # Get rid of optional trailing part of speech: "User_ID_NOUN" -> "User_ID"
-  word=gensub("_[A-Z]+$", "", 1, $1);
+  word=gensub("([^_])_[A-Z]+$", "\1", 1, $1);
 
   # Accumulate count for every year. Format: WORD [ YEAR,COUNT,BOOKS ]+
   # E.g., Alcohol	1983,905,353    1984,1285,433   1985,1088,449
@@ -71,7 +74,7 @@ END {
       for (word in array)  print word "\t" array[word]; 
 }
 '
-	mv $tempfile "$file-accumcache"
+	mv ${temparray[$file]} "$file-accumcache"
     fi &
 done
 wait
