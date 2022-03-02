@@ -25,8 +25,17 @@
 # me to wordfreq.info with some guy trying to sell his datasets under
 # a restrictive license.
 
+
 # Options. Comment out this line if you want to use one CPU at a time.
 multiprocessing=yup
+
+cleanup() {
+    # Remove temp files when the script exit
+    for x in "$tempfile" "${temparray[@]}"; do 
+	if [ -e  "$x" ]; then rm "$x"; fi
+    done
+}
+trap cleanup EXIT
 
 
 tempfile="/dev/shm/temp.txt"
@@ -65,8 +74,8 @@ $1 !~ /_/
 {
   # Accumulate count over years. Format: WORD [ TAB YEAR SPC COUNT SPC BOOKS ]+
   # E.g., Alcohol	1983 905 353    1984 1285 433   1985 1088 449
-  for (i=3; i<=NF; i=i+3)
-  {
+  word=$1;  
+  for (i=3; i<=NF; i=i+3) {
       array[word] += $i;
   }
 }
