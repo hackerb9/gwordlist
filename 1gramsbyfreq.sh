@@ -28,6 +28,8 @@
 tempfile="/dev/shm/temp.txt"
 if ! touch "$tempfile"; then tempfile="temp.txt"; fi
 
+declare -A temparray		# Array of tempfiles for multiprocessing 
+
 
 # Download 14 GiB of data (and awk it down to one ten-thousandth the size.)
 echo "PHASE 0: Download all Google nGrams (> 5 GiB)" >&2
@@ -38,14 +40,14 @@ wget --no-clobber http://storage.googleapis.com/books/ngrams/books/20200217/eng/
 echo "PHASE 1: Accumulating count of usage for every word in Google nGrams" >&2
 cc -o nocommas nocommas.c || exit 1
 
-declare -A temparray
+temparray["regenallwords"]=$(mktemp)
 for file in 1-*-of-*.gz; do
     temparray[$file]=$(mktemp)
 
     if [[ -s "$file-accumcache" && "$file-accumcache" -nt "$file" ]]; then
 	echo "$file-accumcache: using cached file" >&2
     else
-	regenallwords=1
+	echo "yup" > ${temparray["regenallwords"]}
 	zcat "$file" | ./nocommas |
 	    awk -v filename="$file" -v tick="'" > ${temparray[$file]} '
 BEGIN { 
@@ -53,12 +55,12 @@ BEGIN {
 	if (length(cb)==0) 
 	  cb="\r                                                  \r";
 }
-{
-  # Get rid of optional trailing part of speech: "User_ID_NOUN" -> "User_ID"
-  word=gensub("([^_])_[A-Z]+$", "\1", 1, $1);
 
-  # Accumulate count for every year. Format: WORD [ YEAR,COUNT,BOOKS ]+
-  # E.g., Alcohol	1983,905,353    1984,1285,433   1985,1088,449
+# Skip underscores to avoid duplicate counts from part of speech tags.
+$1 !~ /_/
+{
+  # Accumulate count for every year. Format: WORD [ TAB YEAR COUNT BOOKS ]+
+  # E.g., Alcohol	1983 905 353    1984 1285 433   1985 1088 449
   for (i=3; i<=NF; i=i+3)
   {
       array[word] += $i;
@@ -79,6 +81,7 @@ END {
 done
 wait
 
+regenallwords=$(cat ${temparray["regenallwords"]})
 if [[ "$regenallwords" || ! -s "allwords.txt" ]]; then
     echo "Concatenating all 1gram caches to allwords.txt" >&2 
     cat 1-*-of-*.gz-accumcache > "allwords.txt"
