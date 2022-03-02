@@ -55,7 +55,7 @@ have been cleaned up and limited to only the top words, such as
 [frequency-alpha-gcide.txt](https://github.com/hackerb9/gwordlist/blob/master/frequency-alpha-gcide.txt).
 
 ## What got thrown away in these subcopora?
-As you can guess, since the file size went down by 90%, I tossed a lot of info. The biggest changes were from losing the separate counts for each year, ignoring the tags for parts of speech (e.g., I merged watch_VERB with watch_NOUN), and from combining different capitalization into a single term. (Each word is listed under its most frequent capitalization: for example, "London", instead of "london".) If you need that data, it's not hard to modify the scripts. Let me know if you have trouble.
+As you can guess, since the file size went down by 90%, I tossed a lot of info. The biggest changes were from losing the separate counts for each year, ignoring the tags for part of speech (e.g., I used only the count for "watch", which includes the counts for watch_VERB with watch_NOUN), and from combining different capitalization into a single term. (Each word is listed under its most frequent capitalization: for example, "London", instead of "london".) If you need that data, it's not hard to modify the scripts. Let me know if you have trouble.
 
 ## What got added?
 I counted up the total number of words in all the books so I could get a rough percentage of how often each word was being used in English. I also include a running total of the percentage so you can truncate the file wherever you want. (E.g., to get a list of 95% of all words used in English). 
@@ -188,9 +188,15 @@ Compare that with common words that are found much less frequently:
 
 * At first I tried accumulating a different count for each usage of a
   word (e.g., watch_VERB and watch_NOUN), but that meant some words
-  wouldn split their vote and not be listed among the most common.
-  Also, it meant I had many duplicates of the same word. So, I now I
-  just throwaway the part of speech.
+  would split their vote and not be listed among the most common. 
+  [This does not seem to be the case in the 2020 dataset in which the
+  plain word is equal to the total of the various part of speech
+  versions].
+
+  Also, it meant I had many duplicates of the same word. 
+
+  The current solution is to skip any words with an underscore in them. 
+
   	       
   r_ADP   1032605				out_ADV 9199818
   r_CONJ  1048981				out_ADJ 8645123
@@ -257,6 +263,20 @@ Compare that with common words that are found much less frequently:
 * Some words have been mangled by Google on purpose:
 
 	can't, cannot -> "can not" (bigram)
+
+* 2020 format is  WORD [ TAB YEAR,COUNT,BOOKS ]+
+      Alcohol	1983,905,353    1984,1285,433   1985,1088,449
+
+* Words tagged with part of speech appear to be simply duplicate
+  counts of the root word. For example: 
+  
+  ```
+  look_VERB	1490,1,1	...		2019,5355433,213428
+  look_NOUN	1490,2,1	...		2019,2163612,170088
+  look		1490,3,1	...		2019,7519578,217598
+  ```
+
+  Note that 2,163,612 + 5,355,433 ≅ 7,519,578.
 
 * List of Part of Speech tags (from books.google.com/ngrams/info)
   _NOUN_
