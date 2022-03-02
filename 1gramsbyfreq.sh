@@ -36,7 +36,7 @@ declare -A temparray		# Array of tempfiles for multiprocessing
 
 
 # Download 14 GiB of data (and awk it down to one ten-thousandth the size.)
-echo "PHASE 0: Download all Google nGrams (> 5 GiB)" >&2
+echo "PHASE 0: Download all Google nGrams (> 13 GiB)" >&2
 
 # Google Books v3.0 (20200217) comes as 24 files (0 to 23)
 wget --no-clobber http://storage.googleapis.com/books/ngrams/books/20200217/eng/1-000{00..23}-of-00024.gz
