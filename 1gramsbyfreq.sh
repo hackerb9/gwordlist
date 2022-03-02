@@ -59,7 +59,7 @@ BEGIN {
 # Skip underscores to avoid duplicate counts from part of speech tags.
 $1 !~ /_/
 {
-  # Accumulate count for every year. Format: WORD [ TAB YEAR COUNT BOOKS ]+
+  # Accumulate count over years. Format: WORD [ TAB YEAR SPC COUNT SPC BOOKS ]+
   # E.g., Alcohol	1983 905 353    1984 1285 433   1985 1088 449
   for (i=3; i<=NF; i=i+3)
   {
@@ -81,7 +81,9 @@ END {
 done
 wait
 
+# Did any of the processes flag allwords as needing regeneration? 
 regenallwords=$(cat ${temparray["regenallwords"]})
+
 if [[ "$regenallwords" || ! -s "allwords.txt" ]]; then
     echo "Concatenating all 1gram caches to allwords.txt" >&2 
     cat 1-*-of-*.gz-accumcache > "allwords.txt"
