@@ -36,12 +36,14 @@ echo "PHASE 0: Download all Google nGrams (> 5 GiB)" >&2
 wget --no-clobber http://storage.googleapis.com/books/ngrams/books/20200217/eng/1-000{00..23}-of-00024.gz
 
 echo "PHASE 1: Accumulating count of usage for every word in Google nGrams" >&2
+cc -o nocommas nocommas.c || exit 1
+
 for file in 1-*-of-*.gz; do
     if [[ -s "$file-accumcache" && "$file-accumcache" -nt "$file" ]]; then
 	echo "$file-accumcache: using cached file" >&2
     else
 	regenallwords=1
-	zcat "$file" |
+	zcat "$file" | ./nocommas |
 	    awk -v filename="$file" -v tick="'" > "$tempfile" '
 BEGIN { 
 	"tput el1" | getline cb;
@@ -54,10 +56,9 @@ BEGIN {
 
   # Accumulate count for every year. Format: WORD [ YEAR,COUNT,BOOKS ]+
   # E.g., Alcohol	1983,905,353    1984,1285,433   1985,1088,449
-  for (i=1; i<=NF; i++)
+  for (i=3; i<=NF; i=i+3)
   {
-      split($i, a, ",");
-      array[word]+=a[1];
+      array[word] += $i;
   }
 }
 NR%10^5==0 {
