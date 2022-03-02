@@ -25,6 +25,10 @@
 # me to wordfreq.info with some guy trying to sell his datasets under
 # a restrictive license.
 
+# Options. Comment out this line if you want to use one CPU at a time.
+multiprocessing=yup
+
+
 tempfile="/dev/shm/temp.txt"
 if ! touch "$tempfile"; then tempfile="temp.txt"; fi
 
@@ -78,6 +82,7 @@ END {
 '
 	mv ${temparray[$file]} "$file-accumcache"
     fi &
+    if [[ ! $multiprocessing ]]; then wait; fi
 done
 wait
 
