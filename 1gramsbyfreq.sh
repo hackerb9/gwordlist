@@ -51,7 +51,14 @@ BEGIN {
 {
   # Get rid of optional trailing part of speech: "User_ID_NOUN" -> "User_ID"
   word=gensub("_[A-Z]+$", "", 1, $1);
-  array[word]+=$3;
+
+  # Accumulate count for every year. Format: WORD [ YEAR,COUNT,BOOKS ]+
+  # E.g., Alcohol	1983,905,353    1984,1285,433   1985,1088,449
+  for (i=1; i<=NF; i++)
+  {
+      split($i, a, ",");
+      array[word]+=a[1];
+  }
 }
 NR%10^5==0 {
     printf("%s\r%s, ", cb, filename) >"/dev/stderr"; 
