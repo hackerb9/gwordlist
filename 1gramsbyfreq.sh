@@ -72,8 +72,9 @@ END {
 }
 '
 	mv $tempfile "$file-accumcache"
-    fi
+    fi &
 done
+wait
 
 if [[ "$regenallwords" || ! -s "allwords.txt" ]]; then
     echo "Concatenating all 1gram caches to allwords.txt" >&2 
