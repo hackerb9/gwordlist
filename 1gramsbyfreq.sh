@@ -69,8 +69,6 @@ BEGIN {
 	  cb="\r                                                  \r";
 }
 
-# Skip underscores to avoid duplicate counts from part of speech tags.
-$1 !~ /_/
 {
   # Accumulate count over years. Format: WORD [ TAB YEAR SPC COUNT SPC BOOKS ]+
   # E.g., Alcohol	1983 905 353    1984 1285 433   1985 1088 449
