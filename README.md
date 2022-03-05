@@ -60,10 +60,51 @@ As you can guess, since the file size went down by 90%, I tossed a lot of info. 
 ## What got added?
 I counted up the total number of words in all the books so I could get a rough percentage of how often each word was being used in English. I also include a running total of the percentage so you can truncate the file wherever you want. (E.g., to get a list of 95% of all words used in English). 
 
+## Part of Speech tags
+
+The corpus includes words suffixed with an underscore and then a tag
+marking what part of speech the word appears to have been used. For
+example: 
+
+```
+#5101      watch               	    76,770,311	    0.001284%	   85.124506%
+#8225      watch_VERB          	    44,060,908	    0.000737%	   88.174382%
+#10464     watch_NOUN          	    32,697,074	    0.000547%	   89.601624%
+```
+
+* Words tagged with part of speech appear to be simply duplicate
+  counts of the root word. In the example of `watch` above, note that
+  76,770,311 ≈ 44,060,908 + 32,697,074.
+
+* List of Part of Speech tags (from books.google.com/ngrams/info)
+  _NOUN_	noun		(Examples: `time_NOUN`, `State_Noun`, `Mr._Noun`)
+  _VERB_	verb		(Examples: `is_VERB`, `be_VERB`, `have_VERB`)
+  _ADJ_		adjective	(Examples: `other_ADJ`, `such_ADJ`, `same_ADJ`)
+  _ADV_		adverb		(Examples: `not_ADV`, `when_ADV`, `so_ADV`)
+  _PRON_	pronoun		(Examples: `it_PRON`, `I_PRON`, `he_PRON`)
+  _DET_		determiner or article	(Examples: `the_DET`, `a_DET`, `this_DET`)
+  _ADP_		an adposition: either a preposition or a postposition	(Examples: `of_ADP`, `in_ADP`, `for_ADP`)
+  _NUM_ 	numeral		(Examples: `one_NUM`, `1_NUM`, `2001_NUM`)
+  _CONJ_	conjunction (Examples: `and_CONJ`, `or_CONJ`, `but_CONJ`)
+  _PRT_		particle	(Examples: `to_PRT`, `'s_PRT`, `'_PRT` `out_PRT`)
+
+* Part of speech tags, undocumented by Google:
+  _._		punctuation (Example: `,_.`)
+  _NUM_		number
+  _X_		??? (Example: `[_X`, `*_X`, `=_X`, `etc._x`, `de_X`, `No_X`)
+
+* Google uses these tags for searching, but they don't appear (at least in 1-grams):
+  _ROOT_	root of the parse tree	These tags must stand alone (e.g., _START_)
+  _START_	start of a sentence
+  _END_		end of a sentence
+
+
 ## Bugs
 
 * Script cannot run on a 32-bit machine as it briefly requires more
   than 4GiB of RAM as it makes a hashtable of every word.
+
+
 
 ## Old Notes
 
@@ -266,36 +307,6 @@ Compare that with common words that are found much less frequently:
 
 * 2020 format is  WORD [ TAB YEAR,COUNT,BOOKS ]+
       Alcohol	1983,905,353    1984,1285,433   1985,1088,449
-
-* Words tagged with part of speech appear to be simply duplicate
-  counts of the root word. For example: 
-  
-  ```
-  look_VERB	1490,1,1	...		2019,5355433,213428
-  look_NOUN	1490,2,1	...		2019,2163612,170088
-  look		1490,3,1	...		2019,7519578,217598
-  ```
-
-  Note that 2,163,612 + 5,355,433 ≅ 7,519,578.
-
-* List of Part of Speech tags (from books.google.com/ngrams/info)
-  _NOUN_
-  _VERB_
-  _ADJ_		adjective
-  _ADV_		adverb
-  _PRON_	pronoun
-  _DET_		determiner or article
-  _ADP_		an adposition: either a preposition or a postposition
-  _NUM_ 	numeral
-  _CONJ_	conjunction
-  _PRT_		particle
-
-* Google uses these tags for searching, but they don't appear (at least in 1-grams):
-  _ROOT_	root of the parse tree	These tags must stand alone (e.g., _START_)
-  _START_	start of a sentence
-  _END_		end of a sentence
-
-* Google does not document the _X tag
 
 * List of Corpora (from books.google.com/ngrams/info)
 
