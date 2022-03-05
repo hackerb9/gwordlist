@@ -90,7 +90,6 @@ example:
 
 * Part of speech tags, undocumented by Google:
   _._		punctuation (Example: `,_.`)
-  _NUM_		number
   _X_		??? (Example: `[_X`, `*_X`, `=_X`, `etc._x`, `de_X`, `No_X`)
 
 * Google uses these tags for searching, but they don't appear (at least in 1-grams):
