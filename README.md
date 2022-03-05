@@ -104,6 +104,11 @@ example:
   than 4GiB of RAM as it makes a hashtable of every word.
 
 
+## To Do
+
+* Use Makefile for dependencies so that multiprocessing is built in
+  (using `make -j`), instead of having to append & to commands.
+
 
 ## Old Notes
 
