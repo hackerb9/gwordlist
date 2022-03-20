@@ -261,9 +261,18 @@ if [[ -z "$(echo alpha1gramsbyfreq-*.txt)" ]]; then
     exit 1
 fi
 # Combine results from all dictionaries.
-output=alpha1gramsbyfreq-all.txt
+output=alpha1gramsbyfreq-alldicts.txt
 echo "PHASE 4z: merging verified words to create $output" >&2
-sort -u alpha1gramsbyfreq-*.txt | sort -rn -k2 > $output
+for f in alpha1gramsbyfreq-*.txt ENDOFLIST; do
+    if [[ "$f" -nt $output ]]; then
+	sort -u alpha1gramsbyfreq-*.txt | sort -rn -k2 > $output
+	echo "    done." >&2
+	break
+    fi
+done
+if [[ $f == ENDOFLIST ]]; then
+    echo "    Skipping, $output is newer than alpha1gramsbyfreq-*.txt" >&2
+fi
 
 # Now make a pretty version, showing percentage and accumulation.
 echo >&2
