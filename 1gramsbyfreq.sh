@@ -155,9 +155,10 @@ fi
 
 # Now make a pretty version, showing percentage and accumulation.
 echo >&2
-echo "PHASE 3: Creating prettified version, frequency-all.txt" >&2
+echo "PHASE 3: Creating prettified version, frequency-all.txt.gz" >&2
 
-if [[ "frequency-all.txt" -nt "1gramsbyfreq.txt" ]]; then
+if [[ "frequency-all.txt" -nt "1gramsbyfreq.txt" \
+	  || "frequency-all.txt.gz" -nt "1gramsbyfreq.txt" ]]; then
     echo "Skipping prettification. frequency-all.txt is newer than 1gramsbyfreq.txt" >&2
 else
     echo -n "Finding total words... " >&2
@@ -177,6 +178,16 @@ else
     }
     END { print "."  >"/dev/stderr"; }
     ' > frequency-all.txt
+fi
+
+if [[ -e frequency-all.txt.gz && frequency-all.txt -nt frequency-all.txt.gz ]]; then
+    rm frequency-all.txt.gz
+fi
+if [[ ! -e frequency-all.txt.gz ]]; then
+    # Uncompressed, file is over 2 GiB. Compressed, it is 0.25 GiB.
+    echo -n "Compressing to frequency-all.txt.gz" >&2
+    gzip frequency-all.txt
+    echo >&2
 fi
 
 
