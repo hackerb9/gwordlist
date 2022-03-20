@@ -7,9 +7,7 @@
 # books.google.com/ngrams)
 
 # Technique: Read every word from the Google corpus into an
-# associative array and accumulate a count per word. Words of
-# different types are mushed together. ("watch_VERB" and "watch_NOUN"
-# become just "watch").
+# associative array and accumulate a count per word. 
 
 # Words with different capitalizations are mushed together ("the",
 # "The", "THE"), but the most common usage is retained. ("London", not
@@ -20,7 +18,13 @@
 # there were a lot of repeated entries for the same word in different
 # years.
 
-# Side note 2: I presume someone must have done this before, but if so
+# Side note 2: Part of speech tags mean that the same word can appear
+# multiple times in the list. (For example, the word "watch_VERB" is
+# counted separately from "watch_NOUN". The word "watch", without a
+# PoS, is also counted and is approximately equal to the sum of all
+# the different PoS versions).
+
+# Side note 3: I presume someone must have done this before, but if so
 # they sure didn't make it easy to find. Googling just keeps leading
 # me to wordfreq.info with some guy trying to sell his datasets under
 # a restrictive license.
@@ -50,6 +54,7 @@ echo "PHASE 0: Download all Google nGrams (> 13 GiB)" >&2
 # Google Books v3.0 (20200217) comes as 24 files (0 to 23)
 wget --no-clobber http://storage.googleapis.com/books/ngrams/books/20200217/eng/1-000{00..23}-of-00024.gz
 
+echo >&2
 echo "PHASE 1: Accumulating count of usage for every word in Google nGrams" >&2
 cc -o nocommas nocommas.c || exit 1
 
@@ -98,7 +103,8 @@ regenallwords=$(cat ${temparray["regenallwords"]})
 
 if [[ "$regenallwords" || ! -s "allwords.txt" ]]; then
     echo "Concatenating all 1gram caches to allwords.txt" >&2 
-    cat 1-*-of-*.gz-accumcache > "allwords.txt"
+    # Remove all underscores to avoid part of speech duplicates.
+    cat 1-*-of-*.gz-accumcache | grep -v _ > "allwords.txt"
 fi
 
 # Sort most common words to the top
@@ -111,6 +117,7 @@ fi
 
 # Mush together case-insensitively, retaining the most common capitalization.
 
+echo >&2
 echo "PHASE 2: Merging case-insensitively (The, THE, the)" >&2
 if [[  "1gramsbyfreq.txt" -nt "casesensitivefreq.txt" ]]; then
     echo "Skipping merge: 1gramsbyfreq.txt is newer than casesensitivefreq.txt." >&2
@@ -147,6 +154,7 @@ else
 fi
 
 # Now make a pretty version, showing percentage and accumulation.
+echo >&2
 echo "PHASE 3: Creating prettified version, frequency-all.txt" >&2
 
 if [[ "frequency-all.txt" -nt "1gramsbyfreq.txt" ]]; then
@@ -181,8 +189,9 @@ fi
 # * maybe cut off if it occurs less than 100,000 times in the corpus.
 #   Or maybe not... this would rule out publishable, ventriloquism,
 #   behead, ungentlemanly, fisticuffs, and headscarf.
-#   "Mewl" only occurs 6,000 times in the entire trillion word corpus.
+#   "Mewl" only occurs 23,000 times in the entire trillion word corpus.
 
+echo >&2
 echo "PHASE 4: Now extracting valid words by comparing to dictionaries." >&2
 set -- subphase {a..z}
 for dict in wn gcide oed; do
@@ -208,9 +217,17 @@ for dict in wn gcide oed; do
 	mv "${tempfile}2" "$tempfile"
     fi
 
-    echo "    Pruning to first 65536 words actually found in dictionary $dict.">&2
-    # Note that we explicitly want the headword, not inflections of a word.
-    # For example, we want "University" but not "Universities".
+    # XXX We ought to decompress the dict files and then use comm to
+    # quickly find common words. The current method of execing `dict`
+    # over 35 million times (per dictionary) is very slow. As a work
+    # around, we can limit the count of words checked, stopping after
+    # $maxcount most frequent words.
+
+#    maxcount=65536	# Set maxcount to limit number of words found
+
+    echo "    Pruning to ${maxcount:+first $maxcount }words actually found in dictionary $dict.">&2
+    # Note that some dictionaries only find the headword, not inflections
+    # of a word. For example, "University", but not "Universities".
     count=0
     cat "$tempfile" | while read word wordcount; do
 	if dict -h localhost -d $dict -s exact -m "$word" >/dev/null 2>&1; then
@@ -222,8 +239,9 @@ for dict in wn gcide oed; do
 	    tput el1 >&2
 	    printf "\r$total: found $count. Current: $word $wordcount">&2
 	fi
-	if [[ $count -ge 65536 ]]; then break; fi
+	if [[ $maxcount && $count -ge $maxcount ]]; then break; fi
     done >$output
+    echo >&2
 done
 shopt -s nullglob
 if [[ -z "$(echo alpha1gramsbyfreq-*.txt)" ]]; then
@@ -231,8 +249,13 @@ if [[ -z "$(echo alpha1gramsbyfreq-*.txt)" ]]; then
     echo "Maybe you need to 'apt install dictd dict-wn dict-gcide'?"  >&2
     exit 1
 fi
+# Combine results from all dictionaries.
+output=alpha1gramsbyfreq-all.txt
+echo "PHASE 4z: merging verified words to create $output" >&2
+sort -u alpha1gramsbyfreq-*.txt | sort -rn -k2 > $output
 
 # Now make a pretty version, showing percentage and accumulation.
+echo >&2
 echo "PHASE 5: Creating prettified version with cumulative percentage." >&2
 set -- subphase {a..z}
 for unpretty in alpha1gramsbyfreq-*.txt; do
@@ -250,13 +273,13 @@ for unpretty in alpha1gramsbyfreq-*.txt; do
 	echo -n "    Accumulating percentages for each word, saving in $pretty" >&2
 	cat $unpretty | awk -v tick="'" -v totalwords=$totalwords '
     BEGIN {
-      printf( "#%-9s %-20s\t%14s\t%12s\t%12s\n", 
+      printf( "#%-9s %-22s %15s %12s %12s\n", 
 	      "RANKING", "WORD", "COUNT", "PERCENT", "CUMULATIVE" );
     }
     {
       percent=100*$2/totalwords; 
       cum+=percent; 
-      printf( "%-10s %-20s\t%"tick"14d\t%12f%%\t%12f%%\n", NR, $1, $2, percent, cum );
+      printf( "%-10s %-22s %"tick"15d %11f%% %11f%%\n", NR, $1, $2, percent, cum );
     }
     END { print "."  >"/dev/stderr"; }
     ' > $pretty
