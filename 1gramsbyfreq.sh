@@ -167,13 +167,13 @@ else
     echo -n "Accumulating percentages for each word, saving in frequency-all.txt" >&2
     cat 1gramsbyfreq.txt | awk -v tick="'" -v totalwords=$totalwords '
     BEGIN {
-      printf( "#%-9s %-20s\t%14s\t%12s\t%12s\n", 
+      printf( "#%-9s %-22s %15s %12s %12s\n", 
 	      "RANKING", "WORD", "COUNT", "PERCENT", "CUMULATIVE" );
     }
     {
       percent=100*$2/totalwords; 
       cum+=percent; 
-      printf( "%-10s %-20s\t%"tick"14d\t%12f%%\t%12f%%\n", NR, $1, $2, percent, cum );
+      printf( "%-10s %-22s %"tick"15d %11f%% %11f%%\n", NR, $1, $2, percent, cum );
     }
     END { print "."  >"/dev/stderr"; }
     ' > frequency-all.txt
