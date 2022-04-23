@@ -137,6 +137,9 @@ example:
 * Use `comm` instead of `dict` to check wordlists against
   dictionaries. 
 
+* The number of books a word occurs in should help determine popularity.
+  Perhaps _popularity_ = _occurences_ × _books_ ? 
+
 ## LFS
 
 Github does not allow files larger than 100MB. The file
@@ -241,10 +244,15 @@ Compare that with common words that are found much less frequently:
   * Can I ignore occurrences? What would a sort by number of books the
     word has occurred in at least once look like?
 
+        f(occurrences, books):
+          return (books)
+
 * Am I adding things up correctly? The least amount of times any word
   is found is 40. Was that a cut off when they were creating the
   corpus, presuming words that showed up less than that were OCR
   errors? 
+
+  _Yes._ 
 
 
 * There are a bunch of nonsense/units/foreign words mixed in to this
