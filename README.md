@@ -224,12 +224,27 @@ Compare that with common words that are found much less frequently:
 	15013 lone
 	15020 doom
 	
+* Certain domain specific texts overuse the same words over and over.
+  For example, looking at just the total number of uses, _bats_ and
+  _psychosocial_ are equally common. However, _bats_ is used in twice
+  as many books. 
+  
+  * I should weight the number of occurrences by the number of
+    different books the word is found in. But what is the proper weight?
+	
+  * Most naive approach would be to multiply the two numbers together. 
+    Is that sufficient? Defensible?
+	
+        f(occurrences, books):
+          return (occurrences * books)
 
+  * Can I ignore occurrences? What would a sort by number of books the
+    word has occurred in at least once look like?
 
 * Am I adding things up correctly? The least amount of times any word
   is found is 40. Was that a cut off when they were creating the
   corpus, presuming words that showed up less than that were OCR
-  errors?
+  errors? 
 
 
 * There are a bunch of nonsense/units/foreign words mixed in to this
