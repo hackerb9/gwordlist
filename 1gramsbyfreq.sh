@@ -49,7 +49,7 @@ declare -A temparray		# Array of tempfiles for multiprocessing
 
 
 # Download 14 GiB of data (and awk it down to one ten-thousandth the size.)
-echo "PHASE 0: Download all Google nGrams (> 13 GiB)" >&2
+echo "PHASE 0: Download all Google nGrams (> 14 GiB)" >&2
 
 # Google Books v3.0 (20200217) comes as 24 files (0 to 23)
 wget --no-clobber http://storage.googleapis.com/books/ngrams/books/20200217/eng/1-000{00..23}-of-00024.gz
@@ -79,7 +79,7 @@ BEGIN {
   # E.g., Alcohol	1983 905 353    1984 1285 433   1985 1088 449
   word=$1;  
   for (i=3; i<=NF; i=i+2) {
-      occurences[word] += $i;
+      occurrences[word] += $i;
       i++;
       books[word] += $i;
   }
@@ -87,12 +87,14 @@ BEGIN {
 NR%10^5==0 {
     printf("%s\r%s, ", cb, filename) >"/dev/stderr"; 
     printf("line: %gM", NR/1E6) >"/dev/stderr"; 
-    printf("\t%s %"tick"d", word, occurences[word]) >"/dev/stderr";
+    printf("\t%s %"tick"d", word, occurrences[word]) >"/dev/stderr";
     printf("\t%s %"tick"d", word, books[word]) >"/dev/stderr";
 }
 END { 
       print "."  >"/dev/stderr"; 
-      for (word in array)  print word "\t" array[word]; 
+      for (word in occurrences) {
+         print word "\t" occurrences[word] "\t" books[word] ; 
+      }
 }
 '
 	mv ${temparray[$file]} "$file-accumcache"
@@ -115,7 +117,7 @@ if [ -s "casesensitivefreq.txt" -a "casesensitivefreq.txt" -nt "allwords.txt" ];
     echo "Skipping preliminary sort, casesensitivefreq.txt is newer than allwords.txt">&2
 else
     echo "Preliminary sort of allwords.txt, saving to casesensitivefreq.txt" >&2
-    sort -rn -k2 "allwords.txt" > "casesensitivefreq.txt"
+    sort -rn -k3 "allwords.txt" > "casesensitivefreq.txt"
 fi
 
 # Mush together case-insensitively, retaining the most common capitalization.
@@ -133,31 +135,30 @@ else
     }
     { 
       word=tolower($1);
-      if (array[word]==0 && word != $1) {
+      if (occurrences[word]==0 && word != $1) {
+        /* Note: Input is sorted, so most common capitalization is first. */ 
 	capitalization[word]=$1;
 	if (NR%10000==0)
 	  printf("%s\rKeeping capitalization of (%"tick"d) %s", cb, NR, capitalization[word]) >"/dev/stderr";
       }
 
-      occurrences=$2
-      books=$3
-
-      array[word]+=occurences*books
+      occurrences[word]+=$2
+      books[word]+=$3
     }
     END { 
 	 printf ("%s\rSaving...", cb)  >"/dev/stderr";
-	 for (word in array)  {
+	 for (word in occurrences)  {
 	   if (capitalization[word]) 
-	      print capitalization[word] "\t" array[word]; 
+	      print capitalization[word] "\t" occurrences[word] "\t" books[word]; 
 	   else
-	      print word "\t" array[word]; 
+	      print word "\t" occurrences[word] "\t" books[word];
 	 }
 	 print "."  >"/dev/stderr";
     }
     ' > "$tempfile"
 
     echo "Re-sorting results to 1gramsbyfreq.txt" >&2
-    sort -rn -k2 "$tempfile" > "1gramsbyfreq.txt"
+    sort -rn -k3 "$tempfile" > "1gramsbyfreq.txt"
 fi
 
 # Now make a pretty version, showing percentage and accumulation.
@@ -169,7 +170,7 @@ if [[ "frequency-all.txt" -nt "1gramsbyfreq.txt" \
     echo "Skipping prettification. frequency-all.txt is newer than 1gramsbyfreq.txt" >&2
 else
     echo -n "Finding total words... " >&2
-    totalwords=$(awk '{sum+=$2} END{print sum}' < 1gramsbyfreq.txt)
+    totalwords=$(awk '{sum+=$3} END{print sum}' < 1gramsbyfreq.txt)
     printf "%'d\n" "$totalwords" >&2
 
     echo -n "Accumulating percentages for each word, saving in frequency-all.txt" >&2
@@ -179,9 +180,9 @@ else
 	      "RANKING", "WORD", "COUNT", "PERCENT", "CUMULATIVE" );
     }
     {
-      percent=100*$2/totalwords; 
+      percent=100*$3/totalwords; 
       cum+=percent; 
-      printf( "%-10s %-22s %"tick"15d %11f%% %11f%%\n", NR, $1, $2, percent, cum );
+      printf( "%-10s %-22s %"tick"15d %11f%% %11f%%\n", NR, $1, $3, percent, cum );
     }
     END { print "."  >"/dev/stderr"; }
     ' > frequency-all.txt
@@ -295,7 +296,7 @@ for unpretty in alpha1gramsbyfreq-*.txt; do
 	echo "    Skipping prettification as $pretty is newer." >&2
     else
 	echo -n "    Finding total usage of words... " >&2
-	totalwords=$(awk '{sum+=$2} END{print sum}' < $unpretty)
+	totalwords=$(awk '{sum+=$3} END{print sum}' < $unpretty)
 	printf "%'d\n" "$totalwords" >&2
 	echo -n "    Accumulating percentages for each word, saving in $pretty" >&2
 	cat $unpretty | awk -v tick="'" -v totalwords=$totalwords '
@@ -304,9 +305,9 @@ for unpretty in alpha1gramsbyfreq-*.txt; do
 	      "RANKING", "WORD", "COUNT", "PERCENT", "CUMULATIVE" );
     }
     {
-      percent=100*$2/totalwords; 
+      percent=100*$3/totalwords; 
       cum+=percent; 
-      printf( "%-10s %-22s %"tick"15d %11f%% %11f%%\n", NR, $1, $2, percent, cum );
+      printf( "%-10s %-22s %"tick"15d %11f%% %11f%%\n", NR, $1, $3, percent, cum );
     }
     END { print "."  >"/dev/stderr"; }
     ' > $pretty
