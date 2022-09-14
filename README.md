@@ -1,4 +1,11 @@
 # gwordlist
+
+| ***** |*NOTICE*| ***** |
+|-|:----:|-|
+| |This repository serves large files using GitHub's LFS which now charges for bandwidth. If you receive a quota error, download the tiny [1gramsbyfreq.sh](1gramsbyfreq.sh) shell script. Running that on your own machine will download Google's entire corpus (over 15 GB) and then, after much processing, prune it down to 0.25 GB.|   |
+| ***** |     | ***** |
+*     *     *     *     *
+
 This project includes wordlists derived from [Google's ngram corpora](http://books.google.com/ngrams/) plus the programs used to automatically download and derive the lists, should you so wish. 
 
 The most import files:
